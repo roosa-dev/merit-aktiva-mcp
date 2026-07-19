@@ -3,9 +3,14 @@
   "version": "0.1.0",
   "description": "MCP server for the Merit Aktiva accounting API",
   "type": "module",
+  "license": "MIT",
+  "repository": "github:roosa-dev/merit-aktiva-mcp",
+  "keywords": ["mcp", "merit-aktiva", "accounting", "modelcontextprotocol"],
   "bin": { "merit-aktiva-mcp": "dist/index.js" },
-  "files": ["dist"],
+  "files": ["dist", "!dist/*.test.*"],
+  "engines": { "node": ">=21" },
   "scripts": {
+    "prepublishOnly": "npm test",
     "build": "tsc",
     "test": "npm run build && node --test dist/*.test.js",
     "start": "node dist/index.js"

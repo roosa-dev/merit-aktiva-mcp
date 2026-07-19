@@ -7,9 +7,10 @@ MCP server for the [Merit Aktiva](https://api.merit.ee/connecting-robots/referen
 Get your API id and key from Merit Aktiva: Settings → Common settings → API settings.
 
 ```sh
-npm install && npm run build
-claude mcp add merit-aktiva -e MERIT_API_ID=<id> -e MERIT_API_KEY=<key> -- node /path/to/merit-aktiva-mcp/dist/index.js
+claude mcp add merit-aktiva -e MERIT_API_ID=<id> -e MERIT_API_KEY=<key> -- npx -y merit-aktiva-mcp
 ```
+
+Or from a checkout: `npm install && npm run build`, then use `node /path/to/merit-aktiva-mcp/dist/index.js` as the command.
 
 Environment variables:
 
