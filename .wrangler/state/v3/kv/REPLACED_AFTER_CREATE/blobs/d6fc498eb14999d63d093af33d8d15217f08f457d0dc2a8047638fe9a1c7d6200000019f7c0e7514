@@ -1,0 +1,1 @@
+{"clientId":"VYo7GZqbBCx_Bho1","redirectUris":["http://127.0.0.1:9999/cb"],"clientName":"e2e","grantTypes":["authorization_code","refresh_token"],"responseTypes":["code"],"registrationDate":1784492750,"tokenEndpointAuthMethod":"none"}

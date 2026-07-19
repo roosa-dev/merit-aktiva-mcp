@@ -1,0 +1,11 @@
+{
+  "name": "merit-aktiva-mcp",
+  "main": "src/worker.ts",
+  "compatibility_date": "2025-03-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MeritMCP"] }],
+  "durable_objects": {
+    "bindings": [{ "class_name": "MeritMCP", "name": "MCP_OBJECT" }]
+  },
+  "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "REPLACED_AFTER_CREATE" }]
+}
