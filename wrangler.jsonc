@@ -3,9 +3,10 @@
   "main": "src/worker.ts",
   "compatibility_date": "2025-03-10",
   "compatibility_flags": ["nodejs_compat"],
+  "routes": [{ "pattern": "merit-mcp.roosa.dev", "custom_domain": true }],
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MeritMCP"] }],
   "durable_objects": {
     "bindings": [{ "class_name": "MeritMCP", "name": "MCP_OBJECT" }]
   },
-  "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "REPLACED_AFTER_CREATE" }]
+  "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "41b6d3139fb64546870dce5b2fe7f659" }]
 }

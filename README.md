@@ -2,7 +2,17 @@
 
 MCP server for the [Merit Aktiva](https://api.merit.ee/connecting-robots/reference-manual/) accounting API. Exposes ~60 tools covering sales/purchase invoices, payments, customers, vendors, items, general ledger, offers, reference data, and reports — read and write.
 
-## Setup
+## Remote (Cloudflare Workers)
+
+The server can also run as a remote MCP server with OAuth (`src/worker.ts`, `wrangler.jsonc`):
+
+```sh
+claude mcp add --transport http merit-aktiva https://merit-mcp.roosa.dev/mcp
+```
+
+The OAuth authorize page asks for an access key (Worker secret `ACCESS_KEY`). Deploy your own: `wrangler kv namespace create OAUTH_KV` (put the id in `wrangler.jsonc`), `wrangler secret put` for `MERIT_API_ID`, `MERIT_API_KEY`, `ACCESS_KEY`, then `wrangler deploy`.
+
+## Setup (local stdio)
 
 Get your API id and key from Merit Aktiva: Settings → Common settings → API settings.
 
