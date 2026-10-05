@@ -79,6 +79,8 @@ test("tools are generated from the endpoint table", async () => {
     "get_invoices",
     "create_invoice",
     "get_purchase_invoices",
+    "create_purchase_invoice_for_approval",
+    "get_purchase_orders",
     "create_purchase_payment",
     "get_customers",
     "get_profit_report",
@@ -106,6 +108,20 @@ test("calling a tool POSTs to the mapped Merit endpoint and returns the response
     assert.equal(content[0].type, "text");
     assert.match(content[0].text, /Test Customer/);
     assert.ok(!result.isError);
+  });
+});
+
+test("approval-queue tools map to sendpurchorder and GetPOrders", async () => {
+  await withMeritStub(async (captured) => {
+    const client = await connectedClient();
+    await client.callTool({ name: "create_purchase_invoice_for_approval", arguments: { BillNo: "X-1" } });
+    await client.callTool({ name: "get_purchase_orders", arguments: { PeriodStart: "20260901" } });
+
+    assert.deepEqual(
+      captured.map((c) => new URL(c.url, "http://x").pathname),
+      ["/api/v2/sendpurchorder", "/api/v2/GetPOrders"],
+    );
+    assert.equal(captured[0].body, JSON.stringify({ BillNo: "X-1" }));
   });
 });
 

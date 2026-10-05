@@ -9,6 +9,9 @@ type Env = {
   MERIT_API_ID: string;
   MERIT_API_KEY: string;
   MERIT_BASE_URL?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  GOOGLE_REFRESH_TOKEN?: string;
 };
 
 export class MeritMCP extends McpAgent<Env> {
@@ -18,6 +21,10 @@ export class MeritMCP extends McpAgent<Env> {
     process.env.MERIT_API_ID = this.env.MERIT_API_ID;
     process.env.MERIT_API_KEY = this.env.MERIT_API_KEY;
     if (this.env.MERIT_BASE_URL) process.env.MERIT_BASE_URL = this.env.MERIT_BASE_URL;
+    // optional: Gmail read access for fetching invoice attachments by message id
+    for (const k of ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REFRESH_TOKEN"] as const) {
+      if (this.env[k]) process.env[k] = this.env[k];
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { resolveAttachment } from "./attachment.js";
 import { sign, timestampUtc } from "./sign.js";
 
 export async function callMerit(path: string, body: unknown): Promise<string> {
@@ -23,7 +24,8 @@ export async function callMerit(path: string, body: unknown): Promise<string> {
 
 // Docs: https://api.merit.ee/connecting-robots/reference-manual/
 // Dates are strings "yyyymmdd" unless noted. List endpoints cap periods at 3 months.
-export const ENDPOINTS: { name: string; path: string; desc: string }[] = [
+// prepare: transforms the tool arguments before they are sent to Merit
+export const ENDPOINTS: { name: string; path: string; desc: string; prepare?: (body: unknown) => Promise<unknown> }[] = [
   // Sales invoices
   { name: "get_invoices", path: "/api/v2/getinvoices", desc: "List sales invoices. Body: PeriodStart, PeriodEnd (yyyymmdd, max 3 months apart), optional UnPaid (bool), DateType (0=doc date, 1=changed date), BankId." },
   { name: "get_invoices_by_no_or_customer", path: "/api/v2/getinvoices2", desc: "List sales invoices filtered by invoice number or customer. Body: InvoiceNo and/or Customer name filters." },
@@ -35,7 +37,9 @@ export const ENDPOINTS: { name: string; path: string; desc: string }[] = [
   // Purchase invoices
   { name: "get_purchase_invoices", path: "/api/v2/getpurchorders", desc: "List purchase invoices. Body: PeriodStart, PeriodEnd (yyyymmdd, max 3 months), optional UnPaid (bool), DateType (0=doc date, 1=changed)." },
   { name: "get_purchase_invoice", path: "/api/v2/getpurchorder", desc: "Get one purchase invoice with rows and payments. Body: Id (GUID), optional SkipAttachment." },
-  { name: "create_purchase_invoice", path: "/api/v2/sendpurchinvoice", desc: "Create a purchase invoice (creates document + GL entry, bypasses approval flow). Body: Vendor {Name, RegNo, CountryCode, ...}, BillNo, DocDate, DueDate, InvoiceRow[], TaxAmount[], TotalAmount." },
+  { name: "create_purchase_invoice", path: "/api/v2/sendpurchinvoice", desc: "Create a purchase invoice (creates document + GL entry, bypasses approval flow — prefer create_purchase_invoice_for_approval). Body: Vendor {Name, RegNo, CountryCode, ...}, BillNo, DocDate, DueDate, InvoiceRow[], TaxAmount[], TotalAmount; optional Attachment (same forms as create_purchase_invoice_for_approval).", prepare: resolveAttachment },
+  { name: "create_purchase_invoice_for_approval", path: "/api/v2/sendpurchorder", desc: "Send a purchase invoice to the approval queue (Kinnitamata ostuarved); no GL entry until approved in Merit. Body: Vendor {Id or Name, VatAccountable, CountryCode, RegNo, VatRegNo}, DocDate, DueDate, BillNo (max 35), InvoiceRow[] {Item {Code, Description}, Quantity, Price, TaxId, optional GLAccountCode}, TotalAmount (excl. VAT), TaxAmount[] {TaxId, Amount}; optional RefNo, CurrencyCode, Hcomment, Attachment (PDF) as {FileName, FileContent (base64)} or by reference — {Url} (https download) or {GmailMessageId, optional GmailAttachmentId, optional FileName} (server fetches it from Gmail; without an id it picks the attachment named FileName, else the first PDF); ExpenseClaim (bool).", prepare: resolveAttachment },
+  { name: "get_purchase_orders", path: "/api/v2/GetPOrders", desc: "List purchase invoices waiting approval (Kinnitamata ostuarved) / purchase orders. Body: PeriodStart, PeriodEnd (yyyymmdd), optional DateFilter (0=off, 1=doc date, 2=created date), StatusFilter (0=off), WithAttachments (bool)." },
   { name: "delete_purchase_invoice", path: "/api/v1/deletepurchinvoice", desc: "DESTRUCTIVE: delete a purchase invoice. Body: Id (GUID)." },
   // Payments
   { name: "get_payments", path: "/api/v2/getpayments", desc: "List payments. Body: PeriodStart, PeriodEnd (yyyymmdd, max 3 months), optional PaymentType (int), BankId (GUID), DateType." },
@@ -120,7 +124,8 @@ export function createServer(): Server {
       return { content: [{ type: "text", text: `Unknown tool: ${req.params.name}` }], isError: true };
     }
     try {
-      const text = await callMerit(endpoint.path, req.params.arguments ?? {});
+      const body = req.params.arguments ?? {};
+      const text = await callMerit(endpoint.path, endpoint.prepare ? await endpoint.prepare(body) : body);
       return { content: [{ type: "text", text }] };
     } catch (err) {
       return { content: [{ type: "text", text: String(err) }], isError: true };
