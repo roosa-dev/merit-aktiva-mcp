@@ -125,6 +125,22 @@ test("approval-queue tools map to sendpurchorder and GetPOrders", async () => {
   });
 });
 
+test("nested objects sent as JSON strings are decoded before calling Merit", async () => {
+  await withMeritStub(async (captured) => {
+    const client = await connectedClient();
+    await client.callTool({
+      name: "create_purchase_invoice_for_approval",
+      arguments: { BillNo: "{not json", Vendor: '{"Name":"V"}', InvoiceRow: '[{"Quantity":1}]', Note: "plain" },
+    });
+    assert.deepEqual(JSON.parse(captured[0].body), {
+      BillNo: "{not json",
+      Vendor: { Name: "V" },
+      InvoiceRow: [{ Quantity: 1 }],
+      Note: "plain",
+    });
+  });
+});
+
 test("unknown tool name returns an error result", async () => {
   const client = await connectedClient();
   const result = await client.callTool({ name: "no_such_tool", arguments: {} });

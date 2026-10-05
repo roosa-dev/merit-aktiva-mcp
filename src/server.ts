@@ -124,7 +124,7 @@ export function createServer(): Server {
       return { content: [{ type: "text", text: `Unknown tool: ${req.params.name}` }], isError: true };
     }
     try {
-      const body = req.params.arguments ?? {};
+      const body = parseJsonArgs(req.params.arguments ?? {});
       const text = await callMerit(endpoint.path, endpoint.prepare ? await endpoint.prepare(body) : body);
       return { content: [{ type: "text", text }] };
     } catch (err) {
@@ -132,4 +132,20 @@ export function createServer(): Server {
     }
   });
   return server;
+}
+
+// Some MCP clients (e.g. the claude.ai connector proxy) send nested objects/arrays as JSON strings
+// because the input schema is untyped; decode top-level values that parse as an object or array.
+export function parseJsonArgs(args: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(args).map(([k, v]) => {
+      if (typeof v !== "string" || !/^\s*[[{]/.test(v)) return [k, v];
+      try {
+        const parsed = JSON.parse(v);
+        return [k, typeof parsed === "object" && parsed !== null ? parsed : v];
+      } catch {
+        return [k, v];
+      }
+    }),
+  );
 }
